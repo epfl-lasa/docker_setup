@@ -20,7 +20,7 @@ FROM ubuntu:20.04
 
 This will pull the image from the [Ubuntu registry](https://hub.docker.com/_/ubuntu) corresponding to the tag sepcified after the `:` (here 20.04). If no tag is specified, it will download the one corresponding to `latest`.
 
-You can build an image on top of any existing images either on [dockerhub](https://hub.docker.com/), private registry or locally. By default, Docker first checks if an image corresponding to the name & tag specified exists in your local registry. If not, it will pull it from [Dockerhub public registries](https://hub.docker.com/). If none are found, it returns an error.
+You can build an image on top of any other existing image coming from [dockerhub](https://hub.docker.com/), a private registry or  aved locally. By default, Docker first checks if an image corresponding to the name & tag specified exists in your local registry. If not, it will pull it from [Dockerhub public registries](https://hub.docker.com/). If none are found, it returns an error.
 
 As an example, you can build an image on top of an official ROS image, corresponding to the ROS distribution of your choice:
 
@@ -139,7 +139,7 @@ This command is used to copy files either from another image or from the host ma
 COPY --chown=${USER} /path_to_folder /destination_path
 ```
 
-This will copy the content of the folder at `/path_to_folder` on the host in `/destination_path` in the container. Note that specifying the user ensures that the copy has the correct permissions. Otherwise it is executed as `root`.
+This will copy the content of the folder at `/path_to_folder` on the host in `/destination_path` in the container. Note that `--chown=${USER}` specifies to copy as the user to ensure that the copy has the correct permissions. Otherwise it is executed as `root`.
 
 ### Entrypoint
 
