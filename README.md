@@ -2,7 +2,7 @@
 
 This repository contains examples and scripts to help build docker images. The content of the [scripts folder](./scripts) can be copied to any repository and adapted to build a supporting Docker image. The files are described below and we define set of rules for building proper images.
 
-The basic principle of Docker is expected to be known beforehand. In this documentation we refer to the computer on which the image is created as host. Docker creates an image from a Dockerfile, and a running instance of this image is called a container.
+The basic principle of Docker is expected to be known beforehand. In this documentation we refer to the computer on which the image is created as host. Docker creates an image from a `Dockerfile`, and a running instance of this image is called a container. A registry, either local or online, is the place where prebuilt images are stored. The most common online registry is [dockerhub](https://hub.docker.com/) and is directly connected with Docker client.
 
 ## Dockerfile
 
@@ -10,7 +10,7 @@ This is the most important file for building a Docker image. See this is as a co
 
 ### FROM
 
-This is usually the first line of the Dockerfile. It specifies on which image the current image will be built upon. See this as specifying wich Operating System you want to install on your machine. Although, remember that on a Linux host computer, you will only be able to build Linux based images (Docker and the host machine share the same Operating System).
+This is usually the first line of the `Dockerfile`. It specifies on which image the current image will be built upon. See this as specifying wich Operating System you want to install on your machine. Although, remember that on a Linux host computer, you will only be able to build Linux based images (Docker and the host machine share the same Operating System).
 
 For example, if you want to base the image on Ubuntu 20.04 you will specify:
 
@@ -20,7 +20,7 @@ FROM ubuntu:20.04
 
 This will pull the image from the [ubuntu registry](https://hub.docker.com/_/ubuntu) corresponding to the tag sepcified after the `:` (here 20.04). If no tag is specified, it will download the one corresponding to `latest`.
 
-You can build an image on top of any existing images either on [Dockerhub](https://hub.docker.com/), private registry or locally. By default, Docker first search if an image corresponding to the name & tag specified exists in your local registry. If not, it will pull it from [Dockerhub public registries](https://hub.docker.com/). If none are found it returns an error.
+You can build an image on top of any existing images either on [dockerhub](https://hub.docker.com/), private registry or locally. By default, Docker first search if an image corresponding to the name & tag specified exists in your local registry. If not, it will pull it from [Dockerhub public registries](https://hub.docker.com/). If none are found it returns an error.
 
 As an example, you can build an image on top of an official ROS image, corresponding to the ROS distribution of your choice:
 
@@ -64,7 +64,7 @@ Please not the last line `rm -rf /var/lib/apt/lists/*`. Again, this is good prac
 
 ### ENV
 
-The `ENV` command create an environment variable that can be used later in the Dockerfile, but also in the executed container. Syntax for using `ENV` is
+The `ENV` command create an environment variable that can be used later in the `Dockerfile`, but also in the executed container. Syntax for using `ENV` is
 
 ```dockerfile
 ENV MYVAR value
@@ -80,13 +80,13 @@ It is usually used to specify environment variables such as `PYTHON_PATH` or `LD
 
 ### ARG
 
-The `ARG` command is used to define local variables in the scope of the Dockerfile. As opposed to `ENV` variables they will not be valid in the container at runtime. Syntax is a bit different compared to `ENV`:
+The `ARG` command is used to define local variables in the scope of the `Dockerfile`. As opposed to `ENV` variables they will not be valid in the container at runtime. Syntax is a bit different compared to `ENV`:
 
 ```dockerfile
 ARG MYVAR=value
 ```
 
-Any variables defined as `ARG` can also be set at build time. This the way to build template Dockerfile where you can specify specific values when needed during the build process.
+Any variables defined as `ARG` can also be set at build time. This the way to build templated `Dockerfile` where you can specify specific values when needed during the build process.
 
 ### WORKDIR
 
@@ -155,12 +155,213 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 This is not recommended to use but might be needed and can be a life saver.
 
-#### Graphical mode
+### To conclude
 
-By default, Docker runs in headless mode (no graphics). However, if you need to open a graphical application in the container, you will need to share the graphics manager of the host. Simply add the command
+This covers the basics to create a Docker image from a `Dockerfile`. We will now describes the [build](./scripts/build.sh) and [run](./scripts/run.sh) that are helper scripts to build the image and create a container from it.
 
-```dockerfile
-ENV QT_X11_NO_MITSHM 1
+# Building the image
+
+The simplest command to build the image is to run
+
+```bash
+docker build .
 ```
 
-There are additional steps needed at runtime (see below).
+in the folder where the `Dockerfile` is located. It will execute all the commands in the `Dockerfile` and build the image. However, it might be needed to add specific arguments. This is the reason we prefer using a [build](./scripts/build.sh) that simplifies the building call. Below are some specificities that can be added or removed from the script to fit your needs.
+
+## Naming the image and tag
+
+If not specified, name and tag of the image will be a unique id chosen by Docker as a very long integer. This is not ideal as you might need to build another image on top of the one you have just created. Therefore, naming the created image is very important. This can be done with:
+
+```bash
+docker build -t "${NAME}:${TAG}" .
+```
+
+where `${NAME}` and `${TAG}` are variables specified before. By default, we consider in the [build](./scripts/build.sh) script that the name of the image corresponds to the current folder. It is automatically extracted with:
+
+```bash
+NAME=$(echo "${PWD##*/}" | tr _ -)
+```
+
+This also changes `_` to `-` to match docker naming conventions.
+
+## Passing arguments to the Dockerfile
+
+Any `ARG` variable defined in the `Dockerfile` can be set at build time with the command argument `--build-arg MYVAR=value`. For example, passing the `uid` and `gid` of the host user can be done with:
+
+```bash
+UID="$(id -u "${USER}")"
+GID="$(id -g "${USER}")"
+docker build \
+    	--no-cache \
+    	--build-arg UID="${UID}" \
+ 		--build-arg GID="${GID}" \
+ 		.
+```
+
+## Pulling the base image
+
+As seen in the `Dockerfile`, a Docker image is always based on top of another image. When this image is coming from a public registry, Docker automatically pulls it if it did not find it locally. However, as soon as the local image exists it uses this one. Meaning that, if your local image is not updated regularly, you might not have the latest version of it.
+
+When way to automate this is to add a line in the [build](./scripts/build.sh) script force pulling the base image:
+
+```bash
+docker pull "${BASE_IMAGE}:${BASE_TAG}"
+```
+
+where `${BASE_IMAGE}` and `${BASE_TAG}` are variables specified before.
+
+## Rebuilding the image from scratch
+
+By default, Docker keeps a cache version of each line run in the `Dockerfile`. Imagine you modify line 66 of the `Dockerfile` this allows Docker to use the cache version for the 65 previous lines and start building after the line you have just modified, in order to save time.
+
+However, you might want to rebuild the image without using the cache. As an example, if you have cloned a repository in the `Dockerfile` and this repository has been updated, Docker has no way of knowing this and will always use the cached version of it. Your choice is either to modify the `Dockerfile` at the line specifying the cloning (or before), but this is not desired, or rebuild the complete image without cache. Despite this approach taking longer, it is the best option and can be achieve with:
+
+```bash
+docker build --no-cache .
+```
+
+A good way to automate this is to pass an argument `-r` to the [build](./scripts/build.sh) with:
+
+```bash
+REBUILD=0
+
+while getopts 'r' opt; do
+    case $opt in
+        r) REBUILD=1 ;;
+        *) echo 'Error in command line parsing' >&2
+           exit 1
+    esac
+done
+shift "$(( OPTIND - 1 ))"
+```
+
+## To conclude
+
+This conclude the basics for building an image. Obviously, those commands can be combined and written directly in the terminal. However, as you might suspect, this become quickly tedious and this is the reason we recommend using a [build](./scripts/build.sh) to simplify this process. To run the script simply do:
+
+```bash
+sh build.sh
+```
+
+with eventual arguments passed.
+
+# Running the container
+
+Now that the image is built, you will want to execute it, or as Docker language, run a container from it. The simplest command is:
+
+```bash
+docker run "${NAME}:${TAG}"
+```
+
+where `${NAME}` and `${TAG}` are variables specified before and correspond to an image with a valid name and tag, either locally or on a public (or private) resgistry. Now, let us see how we can extend this run command to specify more desired behaviors. Below we present some of the most useful one. Check the [official documentation](https://docs.docker.com/engine/reference/run/) for complete reference.
+
+## Running an interactive container
+
+By default, the run command will execute the command specified by the `CMD` command at the end of the `Dockerfile`. If this command terminates, the container is stoppped, otherwise it hangs until termination. Sometime you might also want to start an interactive container, that acts as a terminal inside the container envrionment to let you execute commands inside the container. For that you need to add:
+
+```bash
+docker run -it "${NAME}:${TAG}"
+```
+
+It is recommanded to couple this with the `--rm` argument to destroy the container at exit. Otherwise, Docker will keep it alive until it is manually destroyed:
+
+```bash
+docker run -it --rm "${NAME}:${TAG}"
+```
+
+## Specifying an environment variable
+
+Any `ENV` variables or even new environment variables can be defined at runtime. This is the same process as `ARG` variables that could be defined at build time. Remember that `ARG` variables are not valid at runtime as opposed to `ENV` ones. This is simply done with:
+
+```bash
+docker run --env MYVAR=value "${NAME}:${TAG}"
+```
+
+## Specifying a network interface
+
+By default, containers run in an isolated network and can be pinged and access via their names. For simplicity, you might want to specify that they should use the host network interface. You can do that with:
+
+```bash
+docker run --net=host "${NAME}:${TAG}"
+```
+
+See the [official documentation](https://docs.docker.com/network/) for more details on networking.
+
+## Mounting a shared volume between the host and the container
+
+This is probably the most tricky part and one of the most important. Containers and host are completly isolated and you can't access files from one another directly. The way to specify that a specific folder is shared between the host and a container is to use mounted volumes at runtime. This is a two step process. First we need to create a volume linked to a specified folder on the host:
+
+```bash
+docker volume create --driver local \
+    --opt type="none" \
+    --opt device="/path_to_folder" \
+    --opt o="bind" \
+    "${VOL_NAME}"
+```
+
+You need to specify the path of the folder (`/path_to_folder`) and a unique name for the volume. If the volume is already created it will not recreate it again. If you change the path to the folder later on you might need to first manually delete the existing volume. This volume can then be linked to any container using its unique name:
+
+```bash
+docker run --volume="${VOL_NAME}:/destination_path/:rw" "${NAME}:${TAG}"
+```
+
+Change the `/destination_path` to the folder inside the container where you want the shared volume to be stored. For sharing simply a file you don't need to create the volume first. You can simply use:
+
+```bash
+docker run --volume="$/path_to_file:/destination_file/:rw" "${NAME}:${TAG}"
+```
+
+The `rw` option provides read and write permissions. This can be changed as well.
+
+## Running in privilege mode
+
+By default, Docker containers are “unprivileged” and cannot, for example, run a Docker daemon inside a Docker container. This is because by default a container is not allowed to access any devices, but a “privileged” container is given access to all devices. This is useful to access graphics options or specific hardware. This is performed with:
+
+```bash
+docker run --privileged "${NAME}:${TAG}"
+```
+
+## Allowing graphical capacities
+
+By default Docker containers run headlessly without possibolity to use grphical capactities. Using them for opening windowed applications requires some steps at runtime. The following configuration allows this on Linux system (does not work on Mac):
+
+```bash
+xhost +
+docker run \
+    --privileged \
+	--env DISPLAY="${DISPLAY}" \
+	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+	--env="XAUTHORITY=$XAUTH" \
+    --volume="$XAUTH:$XAUTH" \
+    "${NAME}:${TAG}"
+```
+
+## Sharing the graphic card
+
+Disclaimer, this obviously works only when the computer is equiped with a Nvidia graphic card installed.
+
+Sometimes, only sharing graphical mode is not enough and the container need to have access to the graphic card. This requires additional steps, the first one is to install the [Nvidia container toolkit](https://github.com/NVIDIA/nvidia-docker) by following the documentation.
+
+Then, at runtime, the container requires additional configurations:
+
+```bash
+docker run \
+    --privileged \
+    --gpus all \
+	--env NVIDIA_VISIBLE_DEVICES="${NVIDIA_VISIBLE_DEVICES:-all}" \
+	--env NVIDIA_DRIVER_CAPABILITIES="${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics" \
+	"${NAME}:${TAG}"
+```
+
+There are other options regarding memory or cpu usage. Check the [official documentation](https://docs.docker.com/config/containers/resource_constraints/) for complete reference.
+
+## To conclude
+
+All the options can be combined again, creating a difficult command to type everytime. This is where the [run](./scripts/run.sh) script comes in handy. As for the [build](./scripts/build.sh) script, modify it for your needs and run it with:
+
+```bash
+sh run.sh
+```
+
+with eventual arguments passed.
