@@ -35,7 +35,7 @@ Some images, specified as `alpine` are specifically designed to be light weight 
 
 ### RUN
 
-The `RUN` command execut the script command written after. It is similar to executing a command in a terminal. For example `RUN echo 'Hello world'` will output 'Hello world'. Note that comments, prefixed by `#` are not executed. Therefore, 
+The `RUN` command execute the script command written after. It is similar to executing a command in a terminal. For example `RUN echo "Hello world"` will output `"Hello world"`. Note that comments, prefixed by `#` and linebreak (`\`) are not executed. Therefore, 
 
 
 ```dockerfile
@@ -44,9 +44,9 @@ RUN echo hello \
 world
 ```
 
-produces a similar result. Generally, use the `RUN` command to install a specific package clone a repository. Any valid command in a terminal is valid after the `RUN` command.
+produces a similar result. Generally, use the `RUN` command to install a specific package or clone a repository. Any valid command in a terminal is valid after the `RUN` command.
 
-As Docker executes commands line by line and store each results, it is recommended to group commands in single line as much as possible. This saves size in the ouptut image. For example, prefer installing all packages in one single line at the beginning of the file such as:
+As Docker executes commands line by line and stores each results, it is recommended to group commands in single line as much as possible. This saves size in the ouptut image. For example, prefer installing all packages in one single line at the beginning of the file such as:
 
 ```dockerfile
 RUN apt update && apt install -y \
@@ -60,11 +60,11 @@ RUN apt update && apt install -y \
   && rm -rf /var/lib/apt/lists/*
 ```
 
-Please not the last line `rm -rf /var/lib/apt/lists/*`. Again, this is good practice to use after installing a package. It delete the cache made `apt update` to save some space. However, if you want or need to install another package afterwards, you will need to re-run `apt update`. This is one of the reasons why it is recommended to run all installations in one batch, as it saves both time and space.
+Note the last line `rm -rf /var/lib/apt/lists/*`. Again, this is good practice to use after installing a package. It deletes the cache made by `apt update` call to save some space. However, if you want or need to install another package afterwards, you will need to re-run `apt update`. This is one of the reasons why it is recommended to run all installations in one batch, as it saves both time and space.
 
 ### ENV
 
-The `ENV` command create an environment variable that can be used later in the `Dockerfile`, but also in the executed container. Syntax for using `ENV` is
+The `ENV` command creates an environment variable that can be used later in the `Dockerfile`, but also in the executed container. Syntax for using `ENV` is
 
 ```dockerfile
 ENV MYVAR value
@@ -86,7 +86,7 @@ The `ARG` command is used to define local variables in the scope of the `Dockerf
 ARG MYVAR=value
 ```
 
-Any variables defined as `ARG` can also be set at build time. This the way to build templated `Dockerfile` where you can specify specific values when needed during the build process.
+Any variable defined as `ARG` can also be set at build time. This the way to build templated `Dockerfile` where you can specify specific values when needed during the build process (see passing arguments in the building step below).
 
 ### WORKDIR
 
@@ -102,30 +102,30 @@ is the equivalent of running
 RUN mkdir -p /home/ros/ros_ws $$ cd /home/ros/ros_ws
 ```
 
-Note that the folder is always created as `root` user (default user is `root` in Docker). If you specify another user in the container, prefers the usage of `mkdir` command but you can still use `WORKDIR` to move to the folder after it has been created.
+Note that the folder is always created as `root` user (default user is `root` in Docker). If you specify another user in the container, prefers the usage of `mkdir` command to give the correct permissions to the created folder. You can still use `WORKDIR` to move to the folder after it has been created as it is preferable compared to using `RUN cd ...`.
 
 ### USER
 
 As said above, default user is `root`. It is recommended, for safety reasons, to create another user in the container and run commands as this user. This is done in two steps. First create the group and user:
 
 ```dockerfile
-ENV USER ros
+ENV USER myuser
 ARG UID=1000
 ARG GID=1000
 RUN addgroup --gid ${GID} ${USER}
-RUN adduser --gecos "ROS User" --disabled-password --uid ${UID} --gid ${GID} ${USER}
+RUN adduser --gecos "My User" --disabled-password --uid ${UID} --gid ${GID} ${USER}
 RUN usermod -a -G dialout ${USER}
 ```
 
-This blocks create an environment variable `USER` with value `ros` and create this user with specific `uid` and `gid`. By default, those values will be 1000 but can be changed at build time by passing the values in the build command (see below). This specific way of creating a user is important if you need the user in the container to match a specific user on the host (defined by its `uid` and `gid`), for example for files shared between the container and the host.
+This blocks create an environment variable `USER` with value `myuser` and create this user with specific `uid` and `gid`. By default, those values will be 1000 but can be changed at build time by passing the values in the build command (see below). This specific way of creating a user is important if you need the user in the container to match a specific user on the host (defined by its `uid` and `gid`), for example for files shared between the container and the host.
 
 After the user is created it can be invoked with:
 
 ```dockerfile
-USER ros
+USER myuser
 ```
 
-Shifting back to root user is:
+Shifting back to `root` user is:
 
 ```dockerfile
 USER root
@@ -133,7 +133,7 @@ USER root
 
 ### COPY
 
-This command is used to copy files either from another image or from the host machine. For example, copying the content of folder from the host is done with:
+This command is used to copy files either from another image or from the host machine. For example, copying the content of a folder from the host is done with:
 
 ```dockerfile
 COPY --chown=${USER} /path_to_folder /destination_path
@@ -141,13 +141,21 @@ COPY --chown=${USER} /path_to_folder /destination_path
 
 This will copy the content of the folder at `/path_to_folder` on the host in `/destination_path` in the container. Note that specifying the user ensures that the copy has the correct permissions. Otherwise it is executed as `root`.
 
+### Entrypoint
+
+TODO
+
+### CMD
+
+TODO
+
 ### Specific commands or usages
 
-Previous commands cover the basics for building docker images. However, there are sometime some more tricks needed for specific configurations:
+Previous commands cover the basics for building docker images. However, there are some more tricks needed for specific configurations:
 
 #### Non interactive mode
 
-Docker does not handle interaction, for example the need to specify arguments during a building or installation process. Each commands need to be executed without interruption. It might be needed, for package installation to specify that the package control manager has to be run in non interactive mode. This is done with:
+Docker does not handle interactions, for example the need to specify arguments during a building or installation process. Each commands need to be executed without interruption. It might be needed, for package installation to specify that the package control manager has to be run in non interactive mode. This is done with:
 
 ```dockerfile
 ENV DEBIAN_FRONTEND=noninteractive
@@ -157,7 +165,7 @@ This is not recommended to use but might be needed and can be a life saver.
 
 ### To conclude
 
-This covers the basics to create a Docker image from a `Dockerfile`. We will now describes the [build](./scripts/build.sh) and [run](./scripts/run.sh) that are helper scripts to build the image and create a container from it.
+This covers the basics to create a Docker image from a `Dockerfile`. We will now describes the build and run process to build the image and run a container from it.
 
 # Building the image
 
@@ -203,7 +211,7 @@ docker build \
 
 As seen in the `Dockerfile`, a Docker image is always based on top of another image. When this image is coming from a public registry, Docker automatically pulls it if it did not find it locally. However, as soon as the local image exists it uses this one. Meaning that, if your local image is not updated regularly, you might not have the latest version of it.
 
-When way to automate this is to add a line in the [build](./scripts/build.sh) script force pulling the base image:
+One way to automate this is to add a line in the [build](./scripts/build.sh) script to force pulling the base image:
 
 ```bash
 docker pull "${BASE_IMAGE}:${BASE_TAG}"
@@ -280,7 +288,7 @@ docker run --env MYVAR=value "${NAME}:${TAG}"
 
 ## Specifying a network interface
 
-By default, containers run in an isolated network and can be pinged and access via their names. For simplicity, you might want to specify that they should use the host network interface. You can do that with:
+By default, containers run in an isolated network and can be pinged and access via their ids. For simplicity, you might want to specify that they should use the host network interface. You can do that with:
 
 ```bash
 docker run --net=host "${NAME}:${TAG}"
@@ -306,7 +314,7 @@ You need to specify the path of the folder (`/path_to_folder`) and a unique name
 docker run --volume="${VOL_NAME}:/destination_path/:rw" "${NAME}:${TAG}"
 ```
 
-Change the `/destination_path` to the folder inside the container where you want the shared volume to be stored. For sharing simply a file you don't need to create the volume first. You can simply use:
+Change the `/destination_path` to the folder inside the container where you want the shared volume to be stored. For sharing a file you don't need to create the volume first. You can use:
 
 ```bash
 docker run --volume="$/path_to_file:/destination_file/:rw" "${NAME}:${TAG}"
@@ -316,7 +324,7 @@ The `rw` option provides read and write permissions. This can be changed as well
 
 ## Running in privilege mode
 
-By default, Docker containers are “unprivileged” and cannot, for example, run a Docker daemon inside a Docker container. This is because by default a container is not allowed to access any devices, but a “privileged” container is given access to all devices. This is useful to access graphics options or specific hardware. This is performed with:
+By default, Docker containers are “unprivileged” and cannot, for example, run a Docker daemon inside a Docker container. This is because a container is not allowed to access any devices, but a “privileged” container is given access to all devices. This is useful to access graphics options or specific hardware. This is performed with:
 
 ```bash
 docker run --privileged "${NAME}:${TAG}"
@@ -324,7 +332,7 @@ docker run --privileged "${NAME}:${TAG}"
 
 ## Allowing graphical capacities
 
-By default Docker containers run headlessly without possibolity to use grphical capactities. Using them for opening windowed applications requires some steps at runtime. The following configuration allows this on Linux system (does not work on Mac):
+By default Docker containers run headlessly without possibility to use graphical capactities. Using them for opening windowed applications requires some steps at runtime. The following configuration allows this on Linux system (does not work on Mac):
 
 ```bash
 xhost +
@@ -341,7 +349,7 @@ docker run \
 
 Disclaimer, this obviously works only when the computer is equiped with a Nvidia graphic card installed.
 
-Sometimes, only sharing graphical mode is not enough and the container need to have access to the graphic card. This requires additional steps, the first one is to install the [Nvidia container toolkit](https://github.com/NVIDIA/nvidia-docker) by following the documentation.
+Sometimes, only sharing graphical mode is not enough and the container need to have access to the graphic card(s). This requires additional steps, the first one is to install the [Nvidia container toolkit](https://github.com/NVIDIA/nvidia-docker) by following the documentation.
 
 Then, at runtime, the container requires additional configurations:
 
