@@ -141,13 +141,16 @@ COPY --chown=${USER} /path_to_folder /destination_path
 
 This will copy the content of the folder at `/path_to_folder` on the host in `/destination_path` in the container. Note that `--chown=${USER}` specifies to copy as the user to ensure that the copy has the correct permissions. Otherwise it is executed as `root`.
 
-### Entrypoint
+### ENTRYPOINT and CMD
 
-TODO
+Both commands allows to specify certain commands that will be executed at runtime when the container is launched. For example you could write:
 
-### CMD
+```dockerfile
+ENTRYPOINT ["/bin/echo", "Hello"]
+CMD ["world"]
+```
 
-TODO
+that will output at runtime `"Hello world"`. The difference between `ENTRYPOINT` and `CMD` is that `CMD` might be ignore or changed at during the run process (cf. specifying a command at runtime below).
 
 ### Specific commands or usages
 
@@ -363,6 +366,23 @@ docker run \
 ```
 
 There are other options regarding memory or cpu usage. Check the [official documentation](https://docs.docker.com/config/containers/resource_constraints/) for complete reference.
+
+## Specifying a command to run
+
+When the `Dockerfile` contains a `CMD` command at the end, one can specify a new command to execute instead. In the example of `"Hello world"` given previously:
+
+```dockerfile
+ENTRYPOINT ["/bin/echo", "Hello"]
+CMD ["world"]
+```
+
+you can change `"world"` with any argument of your choice with:
+
+```bash
+docker run "${NAME}:${TAG}" "John"
+```
+
+which will output `"Hello John"`. This is particularly useful if you want to execute a command that can be different between two containers based on the same image.
 
 ## To conclude
 
