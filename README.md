@@ -365,3 +365,7 @@ sh run.sh
 ```
 
 with eventual arguments passed.
+
+# Examples
+
+As examples are worth a thousand words, you can check our [image repository](https://github.com/epfl-lasa/docker_images) that contains images for packages we work with.
