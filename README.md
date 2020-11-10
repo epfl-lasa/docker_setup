@@ -193,10 +193,10 @@ Any `ARG` variable defined in the `Dockerfile` can be set at build time with the
 UID="$(id -u "${USER}")"
 GID="$(id -g "${USER}")"
 docker build \
-    	--no-cache \
-    	--build-arg UID="${UID}" \
- 		--build-arg GID="${GID}" \
- 		.
+        --no-cache \
+        --build-arg UID="${UID}" \
+        --build-arg GID="${GID}" \
+        .
 ```
 
 ## Pulling the base image
@@ -330,9 +330,9 @@ By default Docker containers run headlessly without possibolity to use grphical 
 xhost +
 docker run \
     --privileged \
-	--env DISPLAY="${DISPLAY}" \
-	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-	--env="XAUTHORITY=$XAUTH" \
+    --env DISPLAY="${DISPLAY}" \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+    --env="XAUTHORITY=$XAUTH" \
     --volume="$XAUTH:$XAUTH" \
     "${NAME}:${TAG}"
 ```
@@ -349,9 +349,9 @@ Then, at runtime, the container requires additional configurations:
 docker run \
     --privileged \
     --gpus all \
-	--env NVIDIA_VISIBLE_DEVICES="${NVIDIA_VISIBLE_DEVICES:-all}" \
-	--env NVIDIA_DRIVER_CAPABILITIES="${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics" \
-	"${NAME}:${TAG}"
+    --env NVIDIA_VISIBLE_DEVICES="${NVIDIA_VISIBLE_DEVICES:-all}" \
+    --env NVIDIA_DRIVER_CAPABILITIES="${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics" \
+    "${NAME}:${TAG}"
 ```
 
 There are other options regarding memory or cpu usage. Check the [official documentation](https://docs.docker.com/config/containers/resource_constraints/) for complete reference.
