@@ -2,7 +2,7 @@
 
 This repository contains examples and scripts to help build docker images. The content of the [scripts folder](./scripts) can be copied to any repository and adapted to build a supporting Docker image. The files are described below and we define set of rules for building proper images.
 
-The basic principle of Docker is expected to be known beforehand. In this documentation we refer to the computer on which the image is created as host. Docker creates an image from a `Dockerfile`, and a running instance of this image is called a container. A registry, either local or online, is the place where prebuilt images are stored. The most common online registry is [dockerhub](https://hub.docker.com/) and is directly connected with Docker client.
+The basic principle of Docker is expected to be known beforehand (if not, read a short introduction [here](https://docs.docker.com/get-started/overview/)). In this documentation we refer to the computer on which the image is created as host. Docker creates an image from a `Dockerfile`, and a running instance of this image is called a container. A registry, either local or online, is the place where prebuilt images are stored. The most common online registry is [dockerhub](https://hub.docker.com/) and is directly connected with Docker client.
 
 ## Dockerfile
 
@@ -10,7 +10,7 @@ This is the most important file for building a Docker image. See this is as a co
 
 ### FROM
 
-This is usually the first line of the `Dockerfile`. It specifies on which image the current image will be built upon. See this as specifying wich Operating System you want to install on your machine. Although, remember that on a Linux host computer, you will only be able to build Linux based images (Docker and the host machine share the same Operating System).
+This is usually the first line of the `Dockerfile`. It specifies on which image the current image will be built upon. See this as specifying which operating system you want to install on your machine. Although, remember that on a Linux host computer, you will only be able to build Linux based images (Docker and the host machine share the same operating system).
 
 For example, if you want to base the image on Ubuntu 20.04 you will specify:
 
@@ -18,9 +18,9 @@ For example, if you want to base the image on Ubuntu 20.04 you will specify:
 FROM ubuntu:20.04
 ```
 
-This will pull the image from the [ubuntu registry](https://hub.docker.com/_/ubuntu) corresponding to the tag sepcified after the `:` (here 20.04). If no tag is specified, it will download the one corresponding to `latest`.
+This will pull the image from the [Ubuntu registry](https://hub.docker.com/_/ubuntu) corresponding to the tag sepcified after the `:` (here 20.04). If no tag is specified, it will download the one corresponding to `latest`.
 
-You can build an image on top of any existing images either on [dockerhub](https://hub.docker.com/), private registry or locally. By default, Docker first search if an image corresponding to the name & tag specified exists in your local registry. If not, it will pull it from [Dockerhub public registries](https://hub.docker.com/). If none are found it returns an error.
+You can build an image on top of any existing images either on [dockerhub](https://hub.docker.com/), private registry or locally. By default, Docker first checks if an image corresponding to the name & tag specified exists in your local registry. If not, it will pull it from [Dockerhub public registries](https://hub.docker.com/). If none are found, it returns an error.
 
 As an example, you can build an image on top of an official ROS image, corresponding to the ROS distribution of your choice:
 
@@ -30,12 +30,12 @@ FROM ros:kinetic-ros-core
 
 will pull the `kinetic-ros-core` image on [ROS registry](https://hub.docker.com/_/ros).
 
-Some images, specified as `alpine` are specifically designed to be light weight versions of specific images. It is interesting to use them when disk usage is an issue (e.g. on embedded systems). 
+Some images, specified as `alpine`, are specifically designed to be light weight versions of specific images. It is interesting to use them when disk usage is an issue (e.g. on embedded systems). 
 
 
 ### RUN
 
-The `RUN` command execute the script command written after. It is similar to executing a command in a terminal. For example `RUN echo "Hello world"` will output `"Hello world"`. Note that comments, prefixed by `#` and linebreak (`\`) are not executed. Therefore, 
+The `RUN` command executes the script commands written after. It is similar to executing a series of commands in a terminal. For example `RUN echo "Hello world"` will output `"Hello world"`. Note that comments, prefixed by `#` and linebreak (`\`) are not executed. Therefore, 
 
 
 ```dockerfile
@@ -60,7 +60,7 @@ RUN apt update && apt install -y \
   && rm -rf /var/lib/apt/lists/*
 ```
 
-Note the last line `rm -rf /var/lib/apt/lists/*`. Again, this is good practice to use after installing a package. It deletes the cache made by `apt update` call to save some space. However, if you want or need to install another package afterwards, you will need to re-run `apt update`. This is one of the reasons why it is recommended to run all installations in one batch, as it saves both time and space.
+Note the last line `rm -rf /var/lib/apt/lists/*`. Again, this is good practice to use after installing a package. It deletes the cache made by the `apt update` call to save some space. However, if you want or need to install another package afterwards, you will need to re-run `apt update`. This is one of the reasons why it is recommended to run all installations in one batch, as it saves both time and space.
 
 ### ENV
 
@@ -90,7 +90,7 @@ Any variable defined as `ARG` can also be set at build time. This the way to bui
 
 ### WORKDIR
 
-This is the command to move into a folder and creating it if non existing. For example:
+This is the command to move into a folder and creating it if non-existing. For example:
 
 ```dockerfile
 WORKDIR /home/ros/ros_ws
@@ -102,7 +102,7 @@ is the equivalent of running
 RUN mkdir -p /home/ros/ros_ws $$ cd /home/ros/ros_ws
 ```
 
-Note that the folder is always created as `root` user (default user is `root` in Docker). If you specify another user in the container, prefers the usage of `mkdir` command to give the correct permissions to the created folder. You can still use `WORKDIR` to move to the folder after it has been created as it is preferable compared to using `RUN cd ...`.
+Note that the folder is always created as `root` user (default user is `root` in Docker). If you specify another user in the container, prefer the usage of `mkdir` command to give the correct permissions to the created folder. You can still use `WORKDIR` to move to the folder after it has been created as it is preferable compared to using `RUN cd ...`.
 
 ### USER
 
@@ -153,9 +153,9 @@ TODO
 
 Previous commands cover the basics for building docker images. However, there are some more tricks needed for specific configurations:
 
-#### Non interactive mode
+#### Non-interactive mode
 
-Docker does not handle interactions, for example the need to specify arguments during a building or installation process. Each commands need to be executed without interruption. It might be needed, for package installation to specify that the package control manager has to be run in non interactive mode. This is done with:
+Docker does not handle interactions, for example the need to specify arguments during a building or installation process. Each commands need to be executed without interruption. It might be needed, for package installation to specify that the package control manager has to be run in non-interactive mode. This is done with:
 
 ```dockerfile
 ENV DEBIAN_FRONTEND=noninteractive
@@ -165,7 +165,7 @@ This is not recommended to use but might be needed and can be a life saver.
 
 ### To conclude
 
-This covers the basics to create a Docker image from a `Dockerfile`. We will now describes the build and run process to build the image and run a container from it.
+This covers the basics to create a Docker image from a `Dockerfile`. We will now describe the build and run process to build the image and run a container from it.
 
 # Building the image
 
@@ -209,7 +209,7 @@ docker build \
 
 ## Pulling the base image
 
-As seen in the `Dockerfile`, a Docker image is always based on top of another image. When this image is coming from a public registry, Docker automatically pulls it if it did not find it locally. However, as soon as the local image exists it uses this one. Meaning that, if your local image is not updated regularly, you might not have the latest version of it.
+As seen in the `Dockerfile`, a Docker image is always based on top of another image. When this image is coming from a public registry, Docker automatically pulls it, if it did not find it locally. However, as soon as the local image exists, it uses this one. Meaning that if your local image is not updated regularly, you might not have the latest version of it.
 
 One way to automate this is to add a line in the [build](./scripts/build.sh) script to force pulling the base image:
 
@@ -246,7 +246,7 @@ shift "$(( OPTIND - 1 ))"
 
 ## To conclude
 
-This conclude the basics for building an image. Obviously, those commands can be combined and written directly in the terminal. However, as you might suspect, this become quickly tedious and this is the reason we recommend using a [build](./scripts/build.sh) to simplify this process. To run the script simply do:
+This concludes the basics for building an image. Obviously, those commands can be combined and written directly in the terminal. However, as you might suspect, this become quickly tedious and this is the reason we recommend using a [build](./scripts/build.sh) to simplify this process. To run the script simply do:
 
 ```bash
 sh build.sh
@@ -272,7 +272,7 @@ By default, the run command will execute the command specified by the `CMD` comm
 docker run -it "${NAME}:${TAG}"
 ```
 
-It is recommanded to couple this with the `--rm` argument to destroy the container at exit. Otherwise, Docker will keep it alive until it is manually destroyed:
+It is recommended to couple this with the `--rm` argument to destroy the container at exit. Otherwise, Docker will keep it alive until it is manually destroyed:
 
 ```bash
 docker run -it --rm "${NAME}:${TAG}"
