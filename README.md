@@ -1,16 +1,24 @@
-# docker_setup
+# Setting up a Docker environment
 
 This repository contains examples and scripts to help build docker images. The content of the [scripts folder](./scripts) can be copied to any repository and adapted to build a supporting Docker image. The files are described below and we define set of rules for building proper images.
 
 The basic principle of Docker is expected to be known beforehand (if not, read a short introduction [here](https://docs.docker.com/get-started/overview/)). In this documentation we refer to the computer on which the image is created as host. Docker creates an image from a `Dockerfile`, and a running instance of this image is called a container. A registry, either local or online, is the place where prebuilt images are stored. The most common online registry is [dockerhub](https://hub.docker.com/) and is directly connected with Docker client.
 
-## Dockerfile
+# Installation of Docker
+
+First step is to isntall the Docker client on your computer. This is available in Linux, Windows or Mac. However, remember one principle of Docker. If you run it on a Linux machine (or Mac), you will only be able to run Linux based images. On Windows, only Windows based ones. You can follow the installation steps on the [official documentation](https://docs.docker.com/engine/install/).
+
+After the installation, we recommend you follow the [post-install steps](https://docs.docker.com/engine/install/linux-postinstall/), at least for Linux installations. Otherwise, you will need to run each command as `root` user (default in Docker) which becomes cumbersome.
+
+When your installation of Docker is complete, please read the [docker overview](https://docs.docker.com/get-started/overview/) to have a good understanding if why you need to use Docker, and follow the steps below to write your images.
+
+# Dockerfile
 
 This is the most important file for building a Docker image. See this is as a cook recipe where you inform the image compiler about the steps that have to be performed during the build process. Check the [official documentation](https://docs.docker.com/engine/reference/builder/) for specific commands. Most common ones are:
 
-### FROM
+## FROM
 
-This is usually the first line of the `Dockerfile`. It specifies on which image the current image will be built upon. See this as specifying which operating system you want to install on your machine. Although, remember that on a Linux host computer, you will only be able to build Linux based images (Docker and the host machine share the same operating system).
+This is usually the first line of the `Dockerfile`. It specifies on which image the current image will be built upon. See this as specifying which operating system you want to install on your machine. Although, remember that on a Linux host computer, you will only be able to build Linux based images.
 
 For example, if you want to base the image on Ubuntu 20.04 you will specify:
 
@@ -33,7 +41,7 @@ will pull the `kinetic-ros-core` image on [ROS registry](https://hub.docker.com/
 Some images, specified as `alpine`, are specifically designed to be light weight versions of specific images. It is interesting to use them when disk usage is an issue (e.g. on embedded systems). 
 
 
-### RUN
+## RUN
 
 The `RUN` command executes the script commands written after. It is similar to executing a series of commands in a terminal. For example `RUN echo "Hello world"` will output `"Hello world"`. Note that comments, prefixed by `#` and linebreak (`\`) are not executed. Therefore, 
 
@@ -62,7 +70,7 @@ RUN apt update && apt install -y \
 
 Note the last line `rm -rf /var/lib/apt/lists/*`. Again, this is good practice to use after installing a package. It deletes the cache made by the `apt update` call to save some space. However, if you want or need to install another package afterwards, you will need to re-run `apt update`. This is one of the reasons why it is recommended to run all installations in one batch, as it saves both time and space.
 
-### ENV
+## ENV
 
 The `ENV` command creates an environment variable that can be used later in the `Dockerfile`, but also in the executed container. Syntax for using `ENV` is
 
@@ -78,7 +86,7 @@ RUN export MYVAR=value
 
 It is usually used to specify environment variables such as `PYTHON_PATH` or `LD_LIBRARY_PATH` needed for compilation.
 
-### ARG
+## ARG
 
 The `ARG` command is used to define local variables in the scope of the `Dockerfile`. As opposed to `ENV` variables they will not be valid in the container at runtime. Syntax is a bit different compared to `ENV`:
 
@@ -88,7 +96,7 @@ ARG MYVAR=value
 
 Any variable defined as `ARG` can also be set at build time. This the way to build templated `Dockerfile` where you can specify specific values when needed during the build process (see passing arguments in the building step below).
 
-### WORKDIR
+## WORKDIR
 
 This is the command to move into a folder and creating it if non-existing. For example:
 
@@ -104,7 +112,7 @@ RUN mkdir -p /home/ros/ros_ws $$ cd /home/ros/ros_ws
 
 Note that the folder is always created as `root` user (default user is `root` in Docker). If you specify another user in the container, prefer the usage of `mkdir` command to give the correct permissions to the created folder. You can still use `WORKDIR` to move to the folder after it has been created as it is preferable compared to using `RUN cd ...`.
 
-### USER
+## USER
 
 As said above, default user is `root`. It is recommended, for safety reasons, to create another user in the container and run commands as this user. This is done in two steps. First create the group and user:
 
@@ -131,7 +139,7 @@ Shifting back to `root` user is:
 USER root
 ```
 
-### COPY
+## COPY
 
 This command is used to copy files either from another image or from the host machine. For example, copying the content of a folder from the host is done with:
 
@@ -141,7 +149,7 @@ COPY --chown=${USER} /path_to_folder /destination_path
 
 This will copy the content of the folder at `/path_to_folder` on the host in `/destination_path` in the container. Note that `--chown=${USER}` specifies to copy as the user to ensure that the copy has the correct permissions. Otherwise it is executed as `root`.
 
-### ENTRYPOINT and CMD
+## ENTRYPOINT and CMD
 
 Both commands allows to specify certain commands that will be executed at runtime when the container is launched. For example you could write:
 
@@ -152,11 +160,11 @@ CMD ["world"]
 
 that will output at runtime `"Hello world"`. The difference between `ENTRYPOINT` and `CMD` is that `CMD` might be ignore or changed at during the run process (cf. specifying a command at runtime below).
 
-### Specific commands or usages
+## Specific commands or usages
 
 Previous commands cover the basics for building docker images. However, there are some more tricks needed for specific configurations:
 
-#### Non-interactive mode
+### Non-interactive mode
 
 Docker does not handle interactions, for example the need to specify arguments during a building or installation process. Each commands need to be executed without interruption. It might be needed, for package installation to specify that the package control manager has to be run in non-interactive mode. This is done with:
 
@@ -166,7 +174,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 This is not recommended to use but might be needed and can be a life saver.
 
-### To conclude
+## To conclude
 
 This covers the basics to create a Docker image from a `Dockerfile`. We will now describe the build and run process to build the image and run a container from it.
 
