@@ -4,13 +4,21 @@ This repository contains examples and scripts to help build docker images. The c
 
 The basic principle of Docker is expected to be known beforehand (if not, read a short introduction [here](https://docs.docker.com/get-started/overview/)). In this documentation we refer to the computer on which the image is created as host. Docker creates an image from a `Dockerfile`, and a running instance of this image is called a container. A registry, either local or online, is the place where prebuilt images are stored. The most common online registry is [dockerhub](https://hub.docker.com/) and is directly connected with Docker client.
 
+# Why using Docker
+
+In short, you need Docker for the following reasons:
+
+* **Ensuring a consistent environment:** Docker acts like a Virtual Machine (VM) where your code is isolated from the rest of your computer. No more incompatible dependencies between different softwares, no more need to keep an old distribution on your system by fear of your code not running anymore if you upgrade... Take the image, run it and enjoy! If the image was working on another computer, it will work on yours as well.
+
+* **Simplifying code sharing and reproducibility of results:** Forget about writing a complex installation manual for your program that will not work for someone else because (insert whatever frsutrating problem ones might encounter). Just provide a built image or at least ways of building it on someone else computer (Dockerfile and eventually building scripts).
+
+Not yet convinced? Read the [docker overview](https://docs.docker.com/get-started/overview/) to have a good understanding of the underlying mechanisms and let's follow the Blue Whale in Dockerland. 
+
 # Installation of Docker
 
 First step is to isntall the Docker client on your computer. This is available in Linux, Windows or Mac. However, remember one principle of Docker. If you run it on a Linux machine (or Mac), you will only be able to run Linux based images. On Windows, only Windows based ones. You can follow the installation steps on the [official documentation](https://docs.docker.com/engine/install/).
 
 After the installation, we recommend you follow the [post-install steps](https://docs.docker.com/engine/install/linux-postinstall/), at least for Linux installations. Otherwise, you will need to run each command as `root` user (default in Docker) which becomes cumbersome.
-
-When your installation of Docker is complete, please read the [docker overview](https://docs.docker.com/get-started/overview/) to have a good understanding if why you need to use Docker, and follow the steps below to write your images.
 
 # Dockerfile
 
