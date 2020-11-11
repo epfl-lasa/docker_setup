@@ -20,7 +20,7 @@ FROM ubuntu:20.04
 
 This will pull the image from the [Ubuntu registry](https://hub.docker.com/_/ubuntu) corresponding to the tag sepcified after the `:` (here 20.04). If no tag is specified, it will download the one corresponding to `latest`.
 
-You can build an image on top of any other existing image coming from [dockerhub](https://hub.docker.com/), a private registry or  aved locally. By default, Docker first checks if an image corresponding to the name & tag specified exists in your local registry. If not, it will pull it from [Dockerhub public registries](https://hub.docker.com/). If none are found, it returns an error.
+You can build an image on top of any other existing image coming from [dockerhub](https://hub.docker.com/), a private registry or saved locally. By default, Docker first checks if an image corresponding to the name & tag specified exists in your local registry. If not, it will pull it from [Dockerhub public registries](https://hub.docker.com/). If none are found, it returns an error.
 
 As an example, you can build an image on top of an official ROS image, corresponding to the ROS distribution of your choice:
 
