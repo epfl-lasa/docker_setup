@@ -8,9 +8,11 @@ The basic principle of Docker is expected to be known beforehand (if not, read a
 
 In short, you need Docker for the following reasons:
 
-* **Ensuring a consistent environment:** Docker acts like a Virtual Machine (VM) where your code is isolated from the rest of your computer. No more incompatible dependencies between different softwares, no more need to keep an old distribution on your system by fear of your code not running anymore if you upgrade... Take the image, run it and enjoy! If the image was working on another computer, it will work on yours as well.
+* **Ensuring a consistent environment:** Docker acts like a Virtual Machine (VM) where your code is isolated from the rest of your computer. No more incompatible dependencies between different softwares, no more need to keep an old distribution on your system by fear of your code not running anymore if you upgrade... Download the image, run it and voila! If the image was working on another computer, it will work on yours as well.
 
-* **Simplifying code sharing and reproducibility of results:** Forget about writing a complex installation manual for your program that will not work for someone else because (insert whatever frsutrating problem ones might encounter). Just provide a built image or at least ways of building it on someone else computer (Dockerfile and eventually building scripts).
+* **Simplifying code sharing and reproducibility of results:** Forget about writing a complex installation manual for your program that will not work for someone else because... (insert whatever frsutrating problem ones might encounter). Just provide a built image or at least ways of building it on someone else computer (Dockerfile and eventually building scripts).
+
+* **Simplify installation between computers:** For most of us, the worst fear is to have to format your computer and takes days of reinstalling all your libraries to have your code running again. Wait, ... What did I install previously to make it work? Why is it not working anymore? Fear not, contanerize your code, download the image and poor yourself a cup of coffe in the meantime.  
 
 Not yet convinced? Read the [docker overview](https://docs.docker.com/get-started/overview/) to have a good understanding of the underlying mechanisms and let's follow the Blue Whale in Dockerland. 
 
