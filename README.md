@@ -405,3 +405,11 @@ with eventual arguments passed.
 # Examples
 
 As examples are worth a thousand words, you can check our [image repository](https://github.com/epfl-lasa/docker_images) that contains images for packages we work with.
+
+# TODO
+
+Below is a list of points to talk about later:
+
+* docker compose
+* versioning
+* pushing images on a registry (e.g. dockerhub)
